@@ -6,9 +6,12 @@ use std::path::PathBuf;
 struct Args {
     #[clap(long, short, parse(from_os_str))]
     config: Option<PathBuf>,
+    #[clap(long, short)]
+    account: Option<String>,
 }
 
 fn main() {
     let args = Args::parse();
-    profitreport::print_profit_report(args.config).unwrap_or_else(|e| eprintln!("{}", e));
+    profitreport::print_profit_report(args.config, args.account)
+        .unwrap_or_else(|e| eprintln!("{}", e));
 }

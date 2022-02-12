@@ -4,6 +4,7 @@ use std::{
     collections::HashMap,
     fmt, fs,
     path::{Path, PathBuf},
+    process::Command,
 };
 
 #[derive(Debug)]
@@ -12,6 +13,7 @@ pub enum ProfitReportError {
     IO(String),
     Toml(String),
     Xdg(String),
+    Utf8(String),
     Other(String),
 }
 
@@ -24,6 +26,7 @@ impl fmt::Display for ProfitReportError {
             Self::IO(e) => write!(f, "IO Error: {}", e),
             Self::Toml(e) => write!(f, "TOML Error: {}", e),
             Self::Xdg(e) => write!(f, "XDG Error: {}", e),
+            Self::Utf8(e) => write!(f, "UTF-8 Error: {}", e),
             Self::Other(e) => write!(f, "Other Error: {}", e),
         }
     }
@@ -53,10 +56,16 @@ impl From<xdg::BaseDirectoriesError> for ProfitReportError {
     }
 }
 
+impl From<std::str::Utf8Error> for ProfitReportError {
+    fn from(error: std::str::Utf8Error) -> Self {
+        Self::Utf8(error.to_string())
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 struct Config {
     default_account: String,
-    accounts: Vec<HashMap<String, AccountConfig>>,
+    accounts: HashMap<String, AccountConfig>,
 }
 
 impl Config {
@@ -95,9 +104,45 @@ enum AuthorizationMethod {
     Pass { user: String, pass_path: String },
 }
 
-pub fn print_profit_report(config_path: Option<PathBuf>) -> Result<(), ProfitReportError> {
+#[tokio::main]
+async fn get_profit_data(account_config: &AccountConfig) -> Result<(), ProfitReportError> {
+    let kimai_config = match &account_config.kimai.auth_method {
+        AuthorizationMethod::Password { user, password } => kimai::Config::new(
+            account_config.kimai.host.clone(),
+            user.into(),
+            password.into(),
+        ),
+        AuthorizationMethod::Pass { user, pass_path } => {
+            let pass_cmd = Command::new("pass").arg(pass_path).output()?;
+            kimai::Config::new(
+                account_config.kimai.host.clone(),
+                user.into(),
+                std::str::from_utf8(&pass_cmd.stdout)?.trim().into(),
+            )
+        }
+    };
+    let customers = kimai::get_customers(&kimai_config, None).await?;
+    println!("{:#?}", customers);
+    Ok(())
+}
+
+pub fn print_profit_report(
+    config_path: Option<PathBuf>,
+    account: Option<String>,
+) -> Result<(), ProfitReportError> {
     let config = Config::load(config_path)?;
-    println!("{:#?}", config);
+    get_profit_data(
+        config
+            .accounts
+            .get(&if let Some(a) = account {
+                a
+            } else {
+                config.default_account
+            })
+            .ok_or_else(|| {
+                ProfitReportError::Other("Given account not found in config!".to_string())
+            })?,
+    )?;
 
     Ok(())
 }

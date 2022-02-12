@@ -12,5 +12,6 @@ clap = { version = "^3.0", features = ["cargo", "derive"] }
 toml = "0.5"
 serde = {version = "^1.0", features = ["derive"]}
 xdg = "^2.1"
+tokio = { version = "^1.16", features = ["full"] }
 kimai = { git = "https://github.com/scattenlaeufer/kimai-rs.git" }
 # kimai = { path = "../kimai-rs" }

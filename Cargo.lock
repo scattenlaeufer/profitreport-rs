@@ -877,6 +877,7 @@ dependencies = [
  "clap 3.0.14",
  "kimai",
  "serde",
+ "tokio",
  "toml",
  "xdg",
 ]
