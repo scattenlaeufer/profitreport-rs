@@ -10,5 +10,5 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    println!("{:#?}", args);
+    profitreport::print_profit_report(args.config).unwrap_or_else(|e| eprintln!("{}", e));
 }
