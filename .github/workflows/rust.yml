@@ -6,7 +6,7 @@ jobs:
     name: Run rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
@@ -21,7 +21,7 @@ jobs:
     name: Run clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
@@ -40,7 +40,7 @@ jobs:
         toolchain: [stable, beta, nightly]
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
