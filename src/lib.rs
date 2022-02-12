@@ -1,12 +1,10 @@
 use clap::crate_name;
-use kimai;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fmt, fs,
     path::{Path, PathBuf},
 };
-use toml;
 
 #[derive(Debug)]
 pub enum ProfitReportError {
