@@ -15,3 +15,14 @@ fn main() {
     profitreport::print_profit_report(args.config, args.account)
         .unwrap_or_else(|e| eprintln!("{}", e));
 }
+
+#[cfg(test)]
+mod main_tests {
+    use super::*;
+    use clap::IntoApp;
+
+    #[test]
+    fn verify_app() {
+        Args::into_app().debug_assert();
+    }
+}
