@@ -31,8 +31,15 @@ struct Accounts {
 
 fn main() {
     let args = Cli::parse();
-    profitreport::print_profit_report(args.config, args.account)
-        .unwrap_or_else(|e| eprintln!("{}", e));
+
+    match args.commands {
+        Some(Commands::Accounts(accounts)) => profitreport::print_accounts_list(accounts.config)
+            .unwrap_or_else(|e| eprintln!("{}", e)),
+        None => {
+            profitreport::print_profit_report(args.config, args.account)
+                .unwrap_or_else(|e| eprintln!("{}", e));
+        }
+    }
 }
 
 #[cfg(test)]

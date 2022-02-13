@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
+use tabled::{Style, Table, Tabled};
 
 #[derive(Debug)]
 pub enum ProfitReportError {
@@ -144,5 +145,53 @@ pub fn print_profit_report(
             })?,
     )?;
 
+    Ok(())
+}
+
+fn display_true_as_check_mark(o: &bool) -> String {
+    if *o {
+        "✔".into()
+    } else {
+        "".into()
+    }
+}
+
+#[derive(Tabled)]
+struct AccountTableRow {
+    name: String,
+    host: String,
+    user: String,
+    auth_method: String,
+    #[field(display_with = "display_true_as_check_mark")]
+    default: bool,
+}
+
+impl AccountTableRow {
+    fn new(name: &str, account: &AccountConfig, default: &str) -> Self {
+        let (user, auth_method) = match &account.kimai.auth_method {
+            AuthorizationMethod::Password { user, password: _ } => (user, "password"),
+            AuthorizationMethod::Pass { user, pass_path: _ } => (user, "pass"),
+        };
+        AccountTableRow {
+            name: name.into(),
+            host: account.kimai.host.clone(),
+            user: user.into(),
+            auth_method: auth_method.into(),
+            default: name == default,
+        }
+    }
+}
+
+pub fn print_accounts_list(config_path: Option<PathBuf>) -> Result<(), ProfitReportError> {
+    let config = Config::load(config_path)?;
+    let mut table_vec = Vec::with_capacity(config.accounts.len());
+    for (name, account) in config.accounts {
+        table_vec.push(AccountTableRow::new(
+            &name,
+            &account,
+            &config.default_account,
+        ));
+    }
+    println!("\n{}", Table::new(table_vec).with(Style::github_markdown()));
     Ok(())
 }
